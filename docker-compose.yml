@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  lb:
+    image: nginx:1.15-alpine
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: always
+    logging: &logging
+      options:
+        max-size: '10k'
+        max-file: '1'
+
+  dns:
+    image: andyshinn/dnsmasq:2.72
+    ports:
+      - 10053:53/udp
+    command: --user=root -A '/#/127.0.0.1'
+    restart: always
+    logging: *logging
