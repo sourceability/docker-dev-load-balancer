@@ -1,13 +1,33 @@
-version: "3"
+version: '3'
+
+networks:
+  traefik-docker:
+    external: true
 
 services:
-  lb:
-    image: nginx:1.15-alpine
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  traefik:
+    image: traefik:v2.2
     restart: always
+    command:
+      - '--log.level=DEBUG'
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.network=traefik-docker'
+      - '--entrypoints.http.address=:80'
+      - '--entrypoints.https.address=:443'
+      - '--entrypoints.https.http.tls=true'
+      - '--providers.file.filename=/etc/traefik/traefik-ssl.toml'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '8080:8080'
+    networks:
+      - traefik-docker
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - './traefik-ssl.toml:/etc/traefik/traefik-ssl.toml'
+      - './ssl/:/etc/traefik/ssl/:ro'
     logging: &logging
       options:
         max-size: '10k'
